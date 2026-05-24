@@ -419,7 +419,7 @@ def game_loop():
     screen8()
     screen9()
     screen10()
-    print(f"Game over! Final score: {score}/10")
+    print(f"Game over! Final score: {score}/10") # print checks, results will be added next version
 
 
 game_loop()
