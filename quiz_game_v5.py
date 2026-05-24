@@ -106,10 +106,10 @@ def load_stats():
 
     if not os.path.exists(STATS_FILE):
         with open(STATS_FILE, "w") as f:
-            f.write(f"Best Accuracy = {stats['Best Accuracy']}\n")
-            f.write(f"Best Time = {stats['best_time']}\n")
+            f.write(f"Best Accuracy = {stats['best_accuracy']}\n")
+            f.write(f"Best Time = None\n")  # No time recorded yet on first run
             f.write(f"Games Played = {stats['games_played']}\n")
-        print(f"[Stats] No stats file found. Created '{STATS_FILE}' with default values.")
+        print("No stats file found, creating one with default values.")
         return stats
 
     with open(STATS_FILE, "r") as f:
@@ -132,24 +132,13 @@ def load_stats():
             elif key == "games_played":
                 stats["games_played"] = int(raw_value)
         except ValueError:
-            print(f"[Stats] Warning: could not parse '{line}', using default for '{key}'.")
+            print(f"Warning: could not read '{key}' from the stats file, using default value instead.")
 
-    print(f"[Stats] Loaded from '{STATS_FILE}': {stats}")
+    print("Stats loaded successfully.")
     return stats
 
 
 def save_stats(stats):
-    """
-    Overwrites game_data.txt with the updated high-score stats block.
-
-    This only touches the three high-score fields (best_accuracy, best_time,
-    games_played). Per-game export records appended by export_game_data() are
-    stored below a separator line and are preserved by re-reading the file
-    first and writing them back after the updated header.
-
-    Parameters:
-        stats (dict): the current stats dict, already updated with any new bests.
-    """
     # Preserve any per-game log lines that sit below the "---" separator
     existing_log_lines = []
     if os.path.exists(STATS_FILE):
@@ -163,34 +152,25 @@ def save_stats(stats):
                 existing_log_lines.append(line)
 
     with open(STATS_FILE, "w") as f:
-        f.write(f"best_accuracy={stats['best_accuracy']}\n")
-        f.write(f"best_time={stats['best_time']}\n")
-        f.write(f"games_played={stats['games_played']}\n")
+        f.write(f"Best Accuracy = {stats['best_accuracy']}\n")
+        # Round to 2dp if a time exists, otherwise write "None"
+        best_time_value = f"{stats['best_time']:.2f}" if stats['best_time'] is not None else "None"
+        f.write(f"Best Time = {best_time_value}\n")
+        f.write(f"Games Played = {stats['games_played']}\n")
         # Re-write the log section if it existed
         if existing_log_lines:
             f.writelines(existing_log_lines)
 
-    print(f"[Stats] Saved to '{STATS_FILE}': {stats}")
+    print("Stats saved successfully.")
 
 
 def export_game_data(accuracy, elapsed):
-    """
-    Appends a single-game record to game_data.txt.
-
-    Called only if the player chooses to export after a game. Each record is
-    written below the "---" separator so it is easy to distinguish from the
-    high-score header block. The record includes the timestamp, score,
-    accuracy, and time taken.
-
-    Parameters:
-        accuracy (float) : accuracy percentage for this game (0-100).
-        elapsed  (float) : time taken in seconds for this game.
-    """
+    # Stores the date and time the game was played
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     minutes = int(elapsed // 60)
     seconds = int(elapsed % 60)
 
-    # If the separator line doesn't exist yet, add it first
+    # Check if the separator line already exists in the file
     separator_exists = False
     if os.path.exists(GAME_LOG_FILE):
         with open(GAME_LOG_FILE, "r") as f:
@@ -203,43 +183,26 @@ def export_game_data(accuracy, elapsed):
         if not separator_exists:
             f.write("---\n")
         f.write(
-            f"[{timestamp}] Score = {score}/10 | Accuracy = {accuracy:.0f}% | Time = {minutes}minutes {seconds}seconds\n"
+            f"[{timestamp}] Score = {score}/10 | Accuracy = {accuracy:.0f}% | Time = {minutes}m {seconds}s\n"
         )
 
-    print(f"[Stats] Game record exported to '{GAME_LOG_FILE}'.") # testing purposes
+    print("Game data exported successfully.")
 
 
 def check_high_scores(stats, accuracy, elapsed):
-    """
-    Compares this game's results against the stored high scores and updates
-    stats in-place if either record is beaten.
-
-    The two high scores are independent:
-        - best_accuracy : beaten if this game's accuracy is strictly higher.
-        - best_time     : beaten if this game's time is strictly lower
-                          (or no time was previously recorded).
-
-    Parameters:
-        stats    (dict)  : the loaded stats dict; mutated directly.
-        accuracy (float) : accuracy percentage for this game (0-100).
-        elapsed  (float) : time taken in seconds for this game.
-
-    Returns:
-        new_accuracy_record (bool): True if a new accuracy high score was set.
-        new_time_record     (bool): True if a new time high score was set.
-    """
+    # Tracks whether a new record was set this game
     new_accuracy_record = False
     new_time_record = False
 
     if accuracy > stats["best_accuracy"]:
         stats["best_accuracy"] = accuracy
         new_accuracy_record = True
-        print(f"[Stats] New accuracy record: {accuracy:.0f}%")
+        print("New accuracy record!")
 
     if stats["best_time"] is None or elapsed < stats["best_time"]:
         stats["best_time"] = elapsed
         new_time_record = True
-        print(f"[Stats] New time record: {elapsed:.1f}s")
+        print("New time record!")
 
     stats["games_played"] += 1
 
@@ -276,19 +239,6 @@ def show_result(correct):
 
 
 def results_screen(elapsed, new_accuracy_record=False, new_time_record=False):
-    """
-    Displays the end-of-game results screen.
-
-    Shows the player's score, accuracy, and time. If either high score was
-    beaten this game, a congratulatory label is shown next to the relevant
-    stat. An "Export Results" button lets the player append this game's data
-    to game_data.txt; the button turns grey once clicked to confirm the save.
-
-    Parameters:
-        elapsed             (float): total time taken in seconds.
-        new_accuracy_record (bool) : whether this game set a new accuracy best.
-        new_time_record     (bool) : whether this game set a new time best.
-    """
     accuracy = (score / 10) * 100
     minutes = int(elapsed // 60)
     seconds = int(elapsed % 60)
