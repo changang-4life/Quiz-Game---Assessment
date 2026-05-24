@@ -98,7 +98,6 @@ DEFAULT_STATS = {
     "games_played": 0,         # Total number of completed games
 }
 
-
 # Screen Class  =================================================
 
 class Screen:
