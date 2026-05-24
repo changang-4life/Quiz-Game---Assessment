@@ -1,0 +1,7 @@
+best_accuracy=80.0
+best_time=13.344834804534912
+games_played=4
+---
+[2026-05-24 18:40:49] score=8/10 | accuracy=80% | time=0m 37s
+[2026-05-24 18:43:28] score=5/10 | accuracy=50% | time=0m 39s
+[2026-05-24 19:09:14] Score = 2/10 | Accuracy = 20% | Time = 0minutes 13seconds
