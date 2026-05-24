@@ -78,25 +78,347 @@ def draw_text(text, font, colour, surface, x, y):
     surface.blit(text_surface, (x, y))
 
 
+def draw_button(surface, text, font, x, y, width, height, colour):
+    button_rect = pygame.Rect(x, y, width, height)
+    pygame.draw.rect(surface, colour, button_rect, border_radius=8)
+    text_surface = font.render(text, True, (255, 255, 255))
+    text_rect = text_surface.get_rect(center=button_rect.center)
+    surface.blit(text_surface, text_rect)
+    return button_rect
+
+
 def screen1():
     running = True
     while running:
         main_screen.fill((230, 28, 68))
-
         question = quiz_questions[1]["question"]
+        options = quiz_questions[1]["options"]
         draw_text(question, font, (255, 255, 255), main_screen, 350, 20)
-
+        button_1 = draw_button(main_screen, options[0], font, 200, 150, 300, 60, (180, 20, 50))
+        button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (180, 20, 50))
+        button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (180, 20, 50))
+        button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (180, 20, 50))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_1.collidepoint(event.pos):
+                    print(f"Selected: {options[0]}")
+                    return
+                if button_2.collidepoint(event.pos):
+                    print(f"Selected: {options[1]}")
+                    return
+                if button_3.collidepoint(event.pos):
+                    print(f"Selected: {options[2]}")
+                    return
+                if button_4.collidepoint(event.pos):
+                    print(f"Selected: {options[3]}")
+                    return
+        pygame.display.update()
+        clock.tick(60)
 
+
+def screen2():
+    running = True
+    while running:
+        main_screen.fill((230, 28, 68))
+        question = quiz_questions[2]["question"]
+        options = quiz_questions[2]["options"]
+        draw_text(question, font, (255, 255, 255), main_screen, 275, 20)
+        button_1 = draw_button(main_screen, options[0], font, 200, 150, 300, 60, (180, 20, 50))
+        button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (180, 20, 50))
+        button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (180, 20, 50))
+        button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (180, 20, 50))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_1.collidepoint(event.pos):
+                    print(f"Selected: {options[0]}")
+                    return
+                if button_2.collidepoint(event.pos):
+                    print(f"Selected: {options[1]}")
+                    return
+                if button_3.collidepoint(event.pos):
+                    print(f"Selected: {options[2]}")
+                    return
+                if button_4.collidepoint(event.pos):
+                    print(f"Selected: {options[3]}")
+                    return
+        pygame.display.update()
+        clock.tick(60)
+
+
+def screen3():
+    running = True
+    while running:
+        main_screen.fill((230, 28, 68))
+        question = quiz_questions[3]["question"]
+        options = quiz_questions[3]["options"]
+        draw_text(question, font, (255, 255, 255), main_screen, 350, 20)
+        button_1 = draw_button(main_screen, options[0], font, 200, 150, 300, 60, (180, 20, 50))
+        button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (180, 20, 50))
+        button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (180, 20, 50))
+        button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (180, 20, 50))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_1.collidepoint(event.pos):
+                    print(f"Selected: {options[0]}")
+                    return
+                if button_2.collidepoint(event.pos):
+                    print(f"Selected: {options[1]}")
+                    return
+                if button_3.collidepoint(event.pos):
+                    print(f"Selected: {options[2]}")
+                    return
+                if button_4.collidepoint(event.pos):
+                    print(f"Selected: {options[3]}")
+                    return
+        pygame.display.update()
+        clock.tick(60)
+
+
+def screen4():
+    running = True
+    while running:
+        main_screen.fill((230, 28, 68))
+        question = quiz_questions[4]["question"]
+        options = quiz_questions[4]["options"]
+        draw_text(question, font, (255, 255, 255), main_screen, 350, 20)
+        button_1 = draw_button(main_screen, options[0], font, 200, 150, 300, 60, (180, 20, 50))
+        button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (180, 20, 50))
+        button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (180, 20, 50))
+        button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (180, 20, 50))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_1.collidepoint(event.pos):
+                    print(f"Selected: {options[0]}")
+                    return
+                if button_2.collidepoint(event.pos):
+                    print(f"Selected: {options[1]}")
+                    return
+                if button_3.collidepoint(event.pos):
+                    print(f"Selected: {options[2]}")
+                    return
+                if button_4.collidepoint(event.pos):
+                    print(f"Selected: {options[3]}")
+                    return
+        pygame.display.update()
+        clock.tick(60)
+
+
+def screen5():
+    running = True
+    while running:
+        main_screen.fill((230, 28, 68))
+        question = quiz_questions[5]["question"]
+        options = quiz_questions[5]["options"]
+        draw_text(question, font, (255, 255, 255), main_screen, 350, 20)
+        button_1 = draw_button(main_screen, options[0], font, 200, 150, 300, 60, (180, 20, 50))
+        button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (180, 20, 50))
+        button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (180, 20, 50))
+        button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (180, 20, 50))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_1.collidepoint(event.pos):
+                    print(f"Selected: {options[0]}")
+                    return
+                if button_2.collidepoint(event.pos):
+                    print(f"Selected: {options[1]}")
+                    return
+                if button_3.collidepoint(event.pos):
+                    print(f"Selected: {options[2]}")
+                    return
+                if button_4.collidepoint(event.pos):
+                    print(f"Selected: {options[3]}")
+                    return
+        pygame.display.update()
+        clock.tick(60)
+
+
+def screen6():
+    running = True
+    while running:
+        main_screen.fill((230, 28, 68))
+        question = quiz_questions[6]["question"]
+        options = quiz_questions[6]["options"]
+        draw_text(question, font, (255, 255, 255), main_screen, 350, 20)
+        button_1 = draw_button(main_screen, options[0], font, 200, 150, 300, 60, (180, 20, 50))
+        button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (180, 20, 50))
+        button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (180, 20, 50))
+        button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (180, 20, 50))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_1.collidepoint(event.pos):
+                    print(f"Selected: {options[0]}")
+                    return
+                if button_2.collidepoint(event.pos):
+                    print(f"Selected: {options[1]}")
+                    return
+                if button_3.collidepoint(event.pos):
+                    print(f"Selected: {options[2]}")
+                    return
+                if button_4.collidepoint(event.pos):
+                    print(f"Selected: {options[3]}")
+                    return
+        pygame.display.update()
+        clock.tick(60)
+
+
+def screen7():
+    running = True
+    while running:
+        main_screen.fill((230, 28, 68))
+        question = quiz_questions[7]["question"]
+        options = quiz_questions[7]["options"]
+        draw_text(question, font, (255, 255, 255), main_screen, 350, 20)
+        button_1 = draw_button(main_screen, options[0], font, 200, 150, 300, 60, (180, 20, 50))
+        button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (180, 20, 50))
+        button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (180, 20, 50))
+        button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (180, 20, 50))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_1.collidepoint(event.pos):
+                    print(f"Selected: {options[0]}")
+                    return
+                if button_2.collidepoint(event.pos):
+                    print(f"Selected: {options[1]}")
+                    return
+                if button_3.collidepoint(event.pos):
+                    print(f"Selected: {options[2]}")
+                    return
+                if button_4.collidepoint(event.pos):
+                    print(f"Selected: {options[3]}")
+                    return
+        pygame.display.update()
+        clock.tick(60)
+
+
+def screen8():
+    running = True
+    while running:
+        main_screen.fill((230, 28, 68))
+        question = quiz_questions[8]["question"]
+        options = quiz_questions[8]["options"]
+        draw_text(question, font, (255, 255, 255), main_screen, 350, 20)
+        button_1 = draw_button(main_screen, options[0], font, 200, 150, 300, 60, (180, 20, 50))
+        button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (180, 20, 50))
+        button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (180, 20, 50))
+        button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (180, 20, 50))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_1.collidepoint(event.pos):
+                    print(f"Selected: {options[0]}")
+                    return
+                if button_2.collidepoint(event.pos):
+                    print(f"Selected: {options[1]}")
+                    return
+                if button_3.collidepoint(event.pos):
+                    print(f"Selected: {options[2]}")
+                    return
+                if button_4.collidepoint(event.pos):
+                    print(f"Selected: {options[3]}")
+                    return
+        pygame.display.update()
+        clock.tick(60)
+
+
+def screen9():
+    running = True
+    while running:
+        main_screen.fill((230, 28, 68))
+        question = quiz_questions[9]["question"]
+        options = quiz_questions[9]["options"]
+        draw_text(question, font, (255, 255, 255), main_screen, 350, 20)
+        button_1 = draw_button(main_screen, options[0], font, 200, 150, 300, 60, (180, 20, 50))
+        button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (180, 20, 50))
+        button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (180, 20, 50))
+        button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (180, 20, 50))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_1.collidepoint(event.pos):
+                    print(f"Selected: {options[0]}")
+                    return
+                if button_2.collidepoint(event.pos):
+                    print(f"Selected: {options[1]}")
+                    return
+                if button_3.collidepoint(event.pos):
+                    print(f"Selected: {options[2]}")
+                    return
+                if button_4.collidepoint(event.pos):
+                    print(f"Selected: {options[3]}")
+                    return
+        pygame.display.update()
+        clock.tick(60)
+
+
+def screen10():
+    running = True
+    while running:
+        main_screen.fill((230, 28, 68))
+        question = quiz_questions[10]["question"]
+        options = quiz_questions[10]["options"]
+        draw_text(question, font, (255, 255, 255), main_screen, (550, 20))
+        button_1 = draw_button(main_screen, options[0], font, 200, 150, 300, 60, (180, 20, 50))
+        button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (180, 20, 50))
+        button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (180, 20, 50))
+        button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (180, 20, 50))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if button_1.collidepoint(event.pos):
+                    print(f"Selected: {options[0]}")
+                    return
+                if button_2.collidepoint(event.pos):
+                    print(f"Selected: {options[1]}")
+                    return
+                if button_3.collidepoint(event.pos):
+                    print(f"Selected: {options[2]}")
+                    return
+                if button_4.collidepoint(event.pos):
+                    print(f"Selected: {options[3]}")
+                    return
         pygame.display.update()
         clock.tick(60)
 
 
 def game_loop():
     screen1()
+    screen2()
+    screen3()
+    screen4()
+    screen5()
+    screen6()
+    screen7()
+    screen8()
+    screen9()
+    screen10()
 
 
 game_loop()
+pygame.quit()
