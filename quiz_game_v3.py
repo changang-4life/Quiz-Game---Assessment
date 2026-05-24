@@ -84,10 +84,9 @@ font = pygame.font.SysFont("Arial", 24)
 font_large = pygame.font.SysFont("Arial", 40)
 font_small = pygame.font.SysFont("Arial", 14)
 
-pygame.display.set_caption("Quiz Game")
+pygame.display.set_caption("Quiz Game - Jade Akinbo")
 icon = pygame.image.load("brain.png")
 pygame.display.set_icon(icon)
-
 
 def draw_text(text, font, colour, surface, x, y, centre=False):
     text_surface = font.render(text, True, colour)
