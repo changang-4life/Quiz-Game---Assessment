@@ -152,10 +152,10 @@ def save_stats(stats):
                 existing_log_lines.append(line)
 
     with open(STATS_FILE, "w") as f:
-        f.write(f"Best Accuracy = {stats['best_accuracy']}\n")
+        f.write(f"Best Accuracy = {stats['best_accuracy']}%\n")
         # Round to 2dp if a time exists, otherwise write "None"
         best_time_value = f"{stats['best_time']:.2f}" if stats['best_time'] is not None else "None"
-        f.write(f"Best Time = {best_time_value}\n")
+        f.write(f"Best Time = {best_time_value}s\n")
         f.write(f"Games Played = {stats['games_played']}\n")
         # Re-write the log section if it existed
         if existing_log_lines:
@@ -253,14 +253,14 @@ def results_screen(elapsed, new_accuracy_record=False, new_time_record=False):
         draw_text(f"Score: {score} / 10", font, BLACK, main_screen, 550, 180, centre=True)
 
         # Accuracy row — highlight if new record
-        draw_text(f"Accuracy: {accuracy:.0f}%", font, BLACK, main_screen, 550, 240, centre=True)
+        draw_text(f"Accuracy: {accuracy:.0f}%", font, BLACK, main_screen, 550, 240, centre = True)
         if new_accuracy_record:
             draw_text("NEW BEST!", font, (180, 0, 180), main_screen, 760, 240, centre=True)
 
         # Time row — highlight if new record
-        draw_text(f"Time: {minutes}m {seconds}s", font, BLACK, main_screen, 550, 300, centre=True)
+        draw_text(f"Time: {minutes}m {seconds}s", font, BLACK, main_screen, 550, 300, centre = True)
         if new_time_record:
-            draw_text("NEW BEST!", font, (180, 0, 180), main_screen, 760, 300, centre=True)
+            draw_text("NEW BEST!", font, (180, 0, 180), main_screen, 760, 300, centre = True)
 
         # Export button — grey out after export to prevent duplicate entries
         export_colour = (150, 150, 150) if exported else (100, 149, 200)
