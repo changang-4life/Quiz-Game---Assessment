@@ -1,9 +1,8 @@
 """
 FINAL VERSION - JADE AKINBO
     - Combined trials
-    - Made final changes for logic
+    - Made final changes for logic, robustness, and future-proofing
 """
-
 
 import pygame
 import time
@@ -80,6 +79,8 @@ RED   = (220, 50, 50)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
+TOTAL_QUESTIONS = len(quiz_questions)  # Single source of truth for question count
+
 main_screen = pygame.display.set_mode((1100, 550))
 font = pygame.font.SysFont("Arial", 24)
 font_large = pygame.font.SysFont("Arial", 40)
@@ -89,13 +90,12 @@ pygame.display.set_caption("Quiz Game - Jade Akinbo")
 icon = pygame.image.load("brain.png")
 pygame.display.set_icon(icon)
 
-STATS_FILE = "game_data.txt"
-GAME_LOG_FILE = "game_data.txt"
+STATS_FILE = "game_data.txt"  # Single file constant used everywhere
 
 DEFAULT_STATS = {
-    "best_accuracy": 0,
-    "best_time": None,
-    "games_played": 0,
+    "best_accuracy": 0,        # Highest accuracy % ever achieved (0-100)
+    "best_time": None,         # Fastest completion time in seconds (None = never completed)
+    "games_played": 0,         # Total number of completed games
 }
 
 
@@ -109,7 +109,7 @@ class Screen:
         self.question = quiz_questions[question_number]["question"]
         self.options = quiz_questions[question_number]["options"]
         self.answer = quiz_questions[question_number]["answer"]
-        self.answered = False
+        self.btn_rects = []  # Initialised here so handle_click is always safe to call
 
     def draw(self):
         main_screen.fill(BLUE)
@@ -123,16 +123,15 @@ class Screen:
         draw_timer()
 
     def handle_click(self, pos):
-        """Check if a button was clicked. Returns True if the player answered."""
+        """Check if a button was clicked. Returns True/False, or None if no button hit."""
         for i, rect in enumerate(self.btn_rects):
             if rect.collidepoint(pos):
-                self.answered = True
                 correct = self.options[i] == self.answer
                 return correct
         return None
 
     def run(self):
-        """Run this screen until the player picks an answer. Returns True/False."""
+        """Run this screen until the player picks an answer."""
         global score
         while True:
             self.draw()
@@ -167,14 +166,22 @@ def load_stats():
     with open(STATS_FILE, "r") as f:
         lines = f.readlines()
 
+    # Warn if the file exists but has no readable content above the separator
+    header_lines = [l for l in lines if l.strip() and l.strip() != "---" and "=" in l and not l.startswith("[")]
+    if not header_lines:
+        print("Warning: stats file exists but appears empty, using default values.")
+        return stats
+
     for line in lines:
         line = line.strip()
         if not line or "=" not in line:
             continue
+        if line.startswith("["):  # Skip log entries below the separator
+            continue
 
         key, _, raw_value = line.partition("=")
         key = key.strip()
-        raw_value = raw_value.strip().rstrip("%s")
+        raw_value = raw_value.strip().replace("%", "").replace("s", "").strip()
 
         try:
             if key == "Best Accuracy":
@@ -191,6 +198,7 @@ def load_stats():
 
 
 def save_stats(stats):
+    # Preserve any per-game log lines that sit below the "---" separator
     existing_log_lines = []
     if os.path.exists(STATS_FILE):
         with open(STATS_FILE, "r") as f:
@@ -219,18 +227,19 @@ def export_game_data(accuracy, elapsed):
     seconds = int(elapsed % 60)
 
     separator_exists = False
-    if os.path.exists(GAME_LOG_FILE):
-        with open(GAME_LOG_FILE, "r") as f:
+    if os.path.exists(STATS_FILE):
+        with open(STATS_FILE, "r") as f:
             for line in f:
                 if line.strip() == "---":
                     separator_exists = True
                     break
 
-    with open(GAME_LOG_FILE, "a") as f:
+    with open(STATS_FILE, "a") as f:
         if not separator_exists:
             f.write("---\n")
+        # Uses TOTAL_QUESTIONS so the log entry stays accurate if questions are added
         f.write(
-            f"[{timestamp}] Score = {score}/10 | Accuracy = {accuracy:.0f}% | Time = {minutes}m {seconds}s\n"
+            f"[{timestamp}] Score = {score}/{TOTAL_QUESTIONS} | Accuracy = {accuracy:.0f}% | Time = {minutes}m {seconds}s\n"
         )
 
     print("Game data exported successfully.")
@@ -240,18 +249,15 @@ def check_high_scores(stats, accuracy, elapsed):
     new_accuracy_record = False
     new_time_record = False
 
-    current_best_accuracy = stats["best_accuracy"]
-    current_best_time = stats["best_time"]
-
-    if accuracy > current_best_accuracy:
+    if accuracy > stats["best_accuracy"]:
         stats["best_accuracy"] = accuracy
         stats["best_time"] = elapsed
         new_accuracy_record = True
         new_time_record = True
         print("New best accuracy and time!")
 
-    elif accuracy == current_best_accuracy:
-        if current_best_time is None or elapsed < current_best_time:
+    elif accuracy == stats["best_accuracy"]:
+        if stats["best_time"] is None or elapsed < stats["best_time"]:
             stats["best_time"] = elapsed
             new_time_record = True
             print("Same accuracy, but faster time!")
@@ -312,26 +318,24 @@ def results_screen(elapsed, accuracy, new_accuracy_record=False, new_time_record
     minutes = int(elapsed // 60)
     seconds = int(elapsed % 60)
 
-    exported = False  # Tracks whether the player has already exported this game
+    exported = False
 
     running = True
     while running:
         main_screen.fill(BLUE)
 
         draw_text("Quiz Complete!", font_large, BLACK, main_screen, 550, 100, centre=True)
-        draw_text(f"Score: {score} / {len(quiz_questions)}", font, BLACK, main_screen, 550, 180, centre=True)
+        # Uses TOTAL_QUESTIONS so score display stays correct if questions are added
+        draw_text(f"Score: {score} / {TOTAL_QUESTIONS}", font, BLACK, main_screen, 550, 180, centre=True)
 
-        # Accuracy row — highlight if new record
         draw_text(f"Accuracy: {accuracy:.0f}%", font, BLACK, main_screen, 550, 240, centre=True)
         if new_accuracy_record:
             draw_text("NEW BEST!", font, (180, 0, 180), main_screen, 760, 240, centre=True)
 
-        # Time row — highlight if new record
         draw_text(f"Time: {minutes}m {seconds}s", font, BLACK, main_screen, 550, 300, centre=True)
         if new_time_record:
             draw_text("NEW BEST!", font, (180, 0, 180), main_screen, 760, 300, centre=True)
 
-        # Export button — grey out after export to prevent duplicate entries
         export_colour = (150, 150, 150) if exported else (100, 149, 200)
         export_btn = draw_button(main_screen, "Save Results", font, 430, 390, 250, 55, export_colour)
 
@@ -349,26 +353,29 @@ def results_screen(elapsed, accuracy, new_accuracy_record=False, new_time_record
         pygame.display.update()
         clock.tick(60)
 
+
 # Game loop =================================================
 
 def game_loop():
-    global game_start_time
+    global game_start_time, score
+    score = 0  # Reset score at the start of every game
     stats = load_stats()
 
     game_start_time = time.time()
     start_time = game_start_time
 
-    # Create a Screen object for each question and run them one at a time
-    for question_number in len(quiz_questions) + 1:
+    # Loop through all questions — count driven by dictionary size
+    for question_number in range(1, TOTAL_QUESTIONS + 1):
         screen = Screen(question_number)
         screen.run()
 
     elapsed = time.time() - start_time
-    accuracy = (score / 10) * 100
+    # Accuracy calculated once here and passed into results_screen and check_high_scores
+    accuracy = (score / TOTAL_QUESTIONS) * 100
 
     new_accuracy_record, new_time_record = check_high_scores(stats, accuracy, elapsed)
     save_stats(stats)
-    results_screen(elapsed, new_accuracy_record, new_time_record)
+    results_screen(elapsed, accuracy, new_accuracy_record, new_time_record)
 
 
 game_loop()
