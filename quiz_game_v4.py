@@ -1,6 +1,6 @@
 """
 Maori NZ Quiz Game by Jade Akinbo
-Version 3 - Load Statistics
+Version 4 - Load Statistics
     - Handles high score and general game statistics
     - If ther eis no txt file, a new one is created
     - Checks if there are already existing txt files under certain names
