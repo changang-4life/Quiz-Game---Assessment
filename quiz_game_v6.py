@@ -1,7 +1,8 @@
 """
 Maori NZ Quiz Game by Jade Akinbo
-Version 6 - Button Class
-    - Introduced a Button class to handle drawing and click detection
+TRIALLING COMPONENT 2 (GAME LOOP): Screen Class
+    - Introduced a Screen class to handle drawing and input for each question
+    - Screen objects are created in the game loop and run one at a time
     - Changes the values inside the appropriate txt files as the user generates more data
     - The user can choose to export the statistics of each game after each play (data is added after every game - game_data.txt)
     - Before the user quits, the game checks whether the player has beaten their previous high score (split into time and accuracy)
@@ -102,36 +103,59 @@ DEFAULT_STATS = {
 }
 
 
-# ── Button Class ──────────────────────────────────────────────────────────────
+# Screen Class  =================================================
 
-class Button:
-    """A clickable button that draws itself and handles its own text sizing."""
+class Screen:
+    """Represents a single question screen. Handles drawing and player input."""
 
-    def __init__(self, text, x, y, width, height, colour):
-        self.text = text
-        self.rect = pygame.Rect(x, y, width, height)
-        self.colour = colour
+    def __init__(self, question_number):
+        self.question_number = question_number
+        self.question = quiz_questions[question_number]["question"]
+        self.options = quiz_questions[question_number]["options"]
+        self.answer = quiz_questions[question_number]["answer"]
+        self.answered = False
 
-    def draw(self, surface):
-        pygame.draw.rect(surface, self.colour, self.rect, border_radius=8)
+    def draw(self):
+        main_screen.fill(BLUE)
+        draw_text(self.question, font, BLACK, main_screen, 550, 50, centre=True)
+        self.btn_rects = [
+            draw_button(main_screen, self.options[0], font, 200, 150, 300, 60, (100, 149, 200)),
+            draw_button(main_screen, self.options[1], font, 600, 150, 300, 60, (100, 149, 200)),
+            draw_button(main_screen, self.options[2], font, 200, 280, 300, 60, (100, 149, 200)),
+            draw_button(main_screen, self.options[3], font, 600, 280, 300, 60, (100, 149, 200)),
+        ]
+        draw_timer()
 
-        # Shrink font until text fits inside the button
-        button_font = font
-        text_surface = button_font.render(self.text, True, WHITE)
-        font_size = 24
-        while text_surface.get_width() > self.rect.width - 20 and font_size > 12:
-            font_size -= 1
-            button_font = pygame.font.SysFont("Arial", font_size)
-            text_surface = button_font.render(self.text, True, WHITE)
+    def handle_click(self, pos):
+        """Check if a button was clicked. Returns True if the player answered."""
+        for i, rect in enumerate(self.btn_rects):
+            if rect.collidepoint(pos):
+                self.answered = True
+                correct = self.options[i] == self.answer
+                return correct
+        return None
 
-        text_rect = text_surface.get_rect(center=self.rect.center)
-        surface.blit(text_surface, text_rect)
+    def run(self):
+        """Run this screen until the player picks an answer. Returns True/False."""
+        global score
+        while True:
+            self.draw()
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    result = self.handle_click(event.pos)
+                    if result is not None:
+                        if result:
+                            score += 1
+                        show_result(result)
+                        return
+            pygame.display.update()
+            clock.tick(60)
 
-    def is_clicked(self, pos):
-        return self.rect.collidepoint(pos)
 
-
-# ── File I/O ──────────────────────────────────────────────────────────────────
+# File I/O  =================================================
 
 def load_stats():
     stats = DEFAULT_STATS.copy()
@@ -240,7 +264,7 @@ def check_high_scores(stats, accuracy, elapsed):
     return new_accuracy_record, new_time_record
 
 
-# ── Drawing helpers ───────────────────────────────────────────────────────────
+# Drawing Functions  =================================================
 
 def draw_text(text, font, colour, surface, x, y, centre=False):
     text_surface = font.render(text, True, colour)
@@ -249,6 +273,25 @@ def draw_text(text, font, colour, surface, x, y, centre=False):
         surface.blit(text_surface, text_rect)
     else:
         surface.blit(text_surface, (x, y))
+
+
+def draw_button(surface, text, font, x, y, width, height, colour):
+    button_rect = pygame.Rect(x, y, width, height)
+    pygame.draw.rect(surface, colour, button_rect, border_radius=8)
+
+    button_font = font
+    text_surface = button_font.render(text, True, WHITE)
+
+    font_size = 24
+    while text_surface.get_width() > width - 20 and font_size > 12:
+        font_size -= 1
+        button_font = pygame.font.SysFont("Arial", font_size)
+        text_surface = button_font.render(text, True, WHITE)
+
+    text_rect = text_surface.get_rect(center=button_rect.center)
+    surface.blit(text_surface, text_rect)
+
+    return button_rect
 
 
 def draw_timer():
@@ -269,16 +312,12 @@ def show_result(correct):
     pygame.time.wait(1000)
 
 
-# ── Screens ───────────────────────────────────────────────────────────────────
-
 def results_screen(elapsed, new_accuracy_record=False, new_time_record=False):
     accuracy = (score / 10) * 100
     minutes = int(elapsed // 60)
     seconds = int(elapsed % 60)
 
     exported = False
-
-    export_btn = Button("Save Results", 425, 390, 250, 55, (100, 149, 200))
 
     running = True
     while running:
@@ -295,9 +334,8 @@ def results_screen(elapsed, new_accuracy_record=False, new_time_record=False):
         if new_time_record:
             draw_text("NEW BEST!", font, (180, 0, 180), main_screen, 760, 300, centre=True)
 
-        # Grey out the button after saving
-        export_btn.colour = (150, 150, 150) if exported else (100, 149, 200)
-        export_btn.draw(main_screen)
+        export_colour = (150, 150, 150) if exported else (100, 149, 200)
+        export_btn = draw_button(main_screen, "Save Results", font, 425, 390, 250, 55, export_colour)
 
         draw_text(attribution_text, font_small, BLACK, main_screen, 10, 525)
 
@@ -306,7 +344,7 @@ def results_screen(elapsed, new_accuracy_record=False, new_time_record=False):
                 pygame.quit()
                 quit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if not exported and export_btn.is_clicked(event.pos):
+                if not exported and export_btn.collidepoint(event.pos):
                     export_game_data(accuracy, elapsed)
                     exported = True
 
@@ -314,315 +352,7 @@ def results_screen(elapsed, new_accuracy_record=False, new_time_record=False):
         clock.tick(60)
 
 
-def screen1():
-    global score
-    running = True
-    while running:
-        main_screen.fill(BLUE)
-        question = quiz_questions[1]["question"]
-        options = quiz_questions[1]["options"]
-        draw_text(question, font, BLACK, main_screen, 550, 50, centre=True)
-        button_1 = Button(options[0], 200, 150, 300, 60, (100, 149, 200))
-        button_2 = Button(options[1], 600, 150, 300, 60, (100, 149, 200))
-        button_3 = Button(options[2], 200, 280, 300, 60, (100, 149, 200))
-        button_4 = Button(options[3], 600, 280, 300, 60, (100, 149, 200))
-        for btn in [button_1, button_2, button_3, button_4]:
-            btn.draw(main_screen)
-        draw_timer()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for i, btn in enumerate([button_1, button_2, button_3, button_4]):
-                    if btn.is_clicked(event.pos):
-                        correct = options[i] == quiz_questions[1]["answer"]
-                        if correct:
-                            score += 1
-                        show_result(correct)
-                        return
-        pygame.display.update()
-        clock.tick(60)
-
-
-def screen2():
-    global score
-    running = True
-    while running:
-        main_screen.fill(BLUE)
-        question = quiz_questions[2]["question"]
-        options = quiz_questions[2]["options"]
-        draw_text(question, font, BLACK, main_screen, 550, 50, centre=True)
-        button_1 = Button(options[0], 200, 150, 300, 60, (100, 149, 200))
-        button_2 = Button(options[1], 600, 150, 300, 60, (100, 149, 200))
-        button_3 = Button(options[2], 200, 280, 300, 60, (100, 149, 200))
-        button_4 = Button(options[3], 600, 280, 300, 60, (100, 149, 200))
-        for btn in [button_1, button_2, button_3, button_4]:
-            btn.draw(main_screen)
-        draw_timer()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for i, btn in enumerate([button_1, button_2, button_3, button_4]):
-                    if btn.is_clicked(event.pos):
-                        correct = options[i] == quiz_questions[2]["answer"]
-                        if correct:
-                            score += 1
-                        show_result(correct)
-                        return
-        pygame.display.update()
-        clock.tick(60)
-
-
-def screen3():
-    global score
-    running = True
-    while running:
-        main_screen.fill(BLUE)
-        question = quiz_questions[3]["question"]
-        options = quiz_questions[3]["options"]
-        draw_text(question, font, BLACK, main_screen, 550, 50, centre=True)
-        button_1 = Button(options[0], 200, 150, 300, 60, (100, 149, 200))
-        button_2 = Button(options[1], 600, 150, 300, 60, (100, 149, 200))
-        button_3 = Button(options[2], 200, 280, 300, 60, (100, 149, 200))
-        button_4 = Button(options[3], 600, 280, 300, 60, (100, 149, 200))
-        for btn in [button_1, button_2, button_3, button_4]:
-            btn.draw(main_screen)
-        draw_timer()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for i, btn in enumerate([button_1, button_2, button_3, button_4]):
-                    if btn.is_clicked(event.pos):
-                        correct = options[i] == quiz_questions[3]["answer"]
-                        if correct:
-                            score += 1
-                        show_result(correct)
-                        return
-        pygame.display.update()
-        clock.tick(60)
-
-
-def screen4():
-    global score
-    running = True
-    while running:
-        main_screen.fill(BLUE)
-        question = quiz_questions[4]["question"]
-        options = quiz_questions[4]["options"]
-        draw_text(question, font, BLACK, main_screen, 550, 50, centre=True)
-        button_1 = Button(options[0], 200, 150, 300, 60, (100, 149, 200))
-        button_2 = Button(options[1], 600, 150, 300, 60, (100, 149, 200))
-        button_3 = Button(options[2], 200, 280, 300, 60, (100, 149, 200))
-        button_4 = Button(options[3], 600, 280, 300, 60, (100, 149, 200))
-        for btn in [button_1, button_2, button_3, button_4]:
-            btn.draw(main_screen)
-        draw_timer()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for i, btn in enumerate([button_1, button_2, button_3, button_4]):
-                    if btn.is_clicked(event.pos):
-                        correct = options[i] == quiz_questions[4]["answer"]
-                        if correct:
-                            score += 1
-                        show_result(correct)
-                        return
-        pygame.display.update()
-        clock.tick(60)
-
-
-def screen5():
-    global score
-    running = True
-    while running:
-        main_screen.fill(BLUE)
-        question = quiz_questions[5]["question"]
-        options = quiz_questions[5]["options"]
-        draw_text(question, font, BLACK, main_screen, 550, 50, centre=True)
-        button_1 = Button(options[0], 200, 150, 300, 60, (100, 149, 200))
-        button_2 = Button(options[1], 600, 150, 300, 60, (100, 149, 200))
-        button_3 = Button(options[2], 200, 280, 300, 60, (100, 149, 200))
-        button_4 = Button(options[3], 600, 280, 300, 60, (100, 149, 200))
-        for btn in [button_1, button_2, button_3, button_4]:
-            btn.draw(main_screen)
-        draw_timer()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for i, btn in enumerate([button_1, button_2, button_3, button_4]):
-                    if btn.is_clicked(event.pos):
-                        correct = options[i] == quiz_questions[5]["answer"]
-                        if correct:
-                            score += 1
-                        show_result(correct)
-                        return
-        pygame.display.update()
-        clock.tick(60)
-
-
-def screen6():
-    global score
-    running = True
-    while running:
-        main_screen.fill(BLUE)
-        question = quiz_questions[6]["question"]
-        options = quiz_questions[6]["options"]
-        draw_text(question, font, BLACK, main_screen, 550, 50, centre=True)
-        button_1 = Button(options[0], 200, 150, 300, 60, (100, 149, 200))
-        button_2 = Button(options[1], 600, 150, 300, 60, (100, 149, 200))
-        button_3 = Button(options[2], 200, 280, 300, 60, (100, 149, 200))
-        button_4 = Button(options[3], 600, 280, 300, 60, (100, 149, 200))
-        for btn in [button_1, button_2, button_3, button_4]:
-            btn.draw(main_screen)
-        draw_timer()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for i, btn in enumerate([button_1, button_2, button_3, button_4]):
-                    if btn.is_clicked(event.pos):
-                        correct = options[i] == quiz_questions[6]["answer"]
-                        if correct:
-                            score += 1
-                        show_result(correct)
-                        return
-        pygame.display.update()
-        clock.tick(60)
-
-
-def screen7():
-    global score
-    running = True
-    while running:
-        main_screen.fill(BLUE)
-        question = quiz_questions[7]["question"]
-        options = quiz_questions[7]["options"]
-        draw_text(question, font, BLACK, main_screen, 550, 50, centre=True)
-        button_1 = Button(options[0], 200, 150, 300, 60, (100, 149, 200))
-        button_2 = Button(options[1], 600, 150, 300, 60, (100, 149, 200))
-        button_3 = Button(options[2], 200, 280, 300, 60, (100, 149, 200))
-        button_4 = Button(options[3], 600, 280, 300, 60, (100, 149, 200))
-        for btn in [button_1, button_2, button_3, button_4]:
-            btn.draw(main_screen)
-        draw_timer()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for i, btn in enumerate([button_1, button_2, button_3, button_4]):
-                    if btn.is_clicked(event.pos):
-                        correct = options[i] == quiz_questions[7]["answer"]
-                        if correct:
-                            score += 1
-                        show_result(correct)
-                        return
-        pygame.display.update()
-        clock.tick(60)
-
-
-def screen8():
-    global score
-    running = True
-    while running:
-        main_screen.fill(BLUE)
-        question = quiz_questions[8]["question"]
-        options = quiz_questions[8]["options"]
-        draw_text(question, font, BLACK, main_screen, 550, 50, centre=True)
-        button_1 = Button(options[0], 200, 150, 300, 60, (100, 149, 200))
-        button_2 = Button(options[1], 600, 150, 300, 60, (100, 149, 200))
-        button_3 = Button(options[2], 200, 280, 300, 60, (100, 149, 200))
-        button_4 = Button(options[3], 600, 280, 300, 60, (100, 149, 200))
-        for btn in [button_1, button_2, button_3, button_4]:
-            btn.draw(main_screen)
-        draw_timer()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for i, btn in enumerate([button_1, button_2, button_3, button_4]):
-                    if btn.is_clicked(event.pos):
-                        correct = options[i] == quiz_questions[8]["answer"]
-                        if correct:
-                            score += 1
-                        show_result(correct)
-                        return
-        pygame.display.update()
-        clock.tick(60)
-
-
-def screen9():
-    global score
-    running = True
-    while running:
-        main_screen.fill(BLUE)
-        question = quiz_questions[9]["question"]
-        options = quiz_questions[9]["options"]
-        draw_text(question, font, BLACK, main_screen, 550, 50, centre=True)
-        button_1 = Button(options[0], 200, 150, 300, 60, (100, 149, 200))
-        button_2 = Button(options[1], 600, 150, 300, 60, (100, 149, 200))
-        button_3 = Button(options[2], 200, 280, 300, 60, (100, 149, 200))
-        button_4 = Button(options[3], 600, 280, 300, 60, (100, 149, 200))
-        for btn in [button_1, button_2, button_3, button_4]:
-            btn.draw(main_screen)
-        draw_timer()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for i, btn in enumerate([button_1, button_2, button_3, button_4]):
-                    if btn.is_clicked(event.pos):
-                        correct = options[i] == quiz_questions[9]["answer"]
-                        if correct:
-                            score += 1
-                        show_result(correct)
-                        return
-        pygame.display.update()
-        clock.tick(60)
-
-
-def screen10():
-    global score
-    running = True
-    while running:
-        main_screen.fill(BLUE)
-        question = quiz_questions[10]["question"]
-        options = quiz_questions[10]["options"]
-        draw_text(question, font, BLACK, main_screen, 550, 50, centre=True)
-        button_1 = Button(options[0], 200, 150, 300, 60, (100, 149, 200))
-        button_2 = Button(options[1], 600, 150, 300, 60, (100, 149, 200))
-        button_3 = Button(options[2], 200, 280, 300, 60, (100, 149, 200))
-        button_4 = Button(options[3], 600, 280, 300, 60, (100, 149, 200))
-        for btn in [button_1, button_2, button_3, button_4]:
-            btn.draw(main_screen)
-        draw_timer()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                for i, btn in enumerate([button_1, button_2, button_3, button_4]):
-                    if btn.is_clicked(event.pos):
-                        correct = options[i] == quiz_questions[10]["answer"]
-                        if correct:
-                            score += 1
-                        show_result(correct)
-                        return
-        pygame.display.update()
-        clock.tick(60)
-
+# Game loop =================================================
 
 def game_loop():
     global game_start_time
@@ -631,16 +361,10 @@ def game_loop():
     game_start_time = time.time()
     start_time = game_start_time
 
-    screen1()
-    screen2()
-    screen3()
-    screen4()
-    screen5()
-    screen6()
-    screen7()
-    screen8()
-    screen9()
-    screen10()
+    # Create a Screen object for each question and run them one at a time
+    for question_number in len(quiz_questions) + 1:
+        screen = Screen(question_number)
+        screen.run()
 
     elapsed = time.time() - start_time
     accuracy = (score / 10) * 100
