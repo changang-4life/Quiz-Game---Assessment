@@ -107,7 +107,7 @@ def load_stats():
     if not os.path.exists(STATS_FILE):
         with open(STATS_FILE, "w") as f:
             f.write(f"Best Accuracy = {stats['best_accuracy']}\n")
-            f.write(f"Best Time = None\n")  # No time recorded yet on first run
+            f.write(f"Best Time = None\n")
             f.write(f"Games Played = {stats['games_played']}\n")
         print("No stats file found, creating one with default values.")
         return stats
@@ -122,14 +122,14 @@ def load_stats():
 
         key, _, raw_value = line.partition("=")
         key = key.strip()
-        raw_value = raw_value.strip()
+        raw_value = raw_value.strip().rstrip("%s")  # strip trailing % or s units
 
         try:
-            if key == "best_accuracy":
+            if key == "Best Accuracy":
                 stats["best_accuracy"] = float(raw_value)
-            elif key == "best_time":
+            elif key == "Best Time":
                 stats["best_time"] = None if raw_value == "None" else float(raw_value)
-            elif key == "games_played":
+            elif key == "Games Played":
                 stats["games_played"] = int(raw_value)
         except ValueError:
             print(f"Warning: could not read '{key}' from the stats file, using default value instead.")
@@ -190,20 +190,31 @@ def export_game_data(accuracy, elapsed):
 
 
 def check_high_scores(stats, accuracy, elapsed):
-    # Tracks whether a new record was set this game
     new_accuracy_record = False
     new_time_record = False
 
-    if accuracy > stats["best_accuracy"]:
+    current_best_accuracy = stats["best_accuracy"]
+    current_best_time = stats["best_time"]
+
+    # Case 1: Better accuracy always wins
+    if accuracy > current_best_accuracy:
         stats["best_accuracy"] = accuracy
-        new_accuracy_record = True
-        print("New accuracy record!")
-
-    if stats["best_time"] is None or elapsed < stats["best_time"]:
         stats["best_time"] = elapsed
-        new_time_record = True
-        print("New time record!")
 
+        new_accuracy_record = True
+        new_time_record = True
+
+        print("New best accuracy and time!")
+
+    # Case 2: Same accuracy → compare times
+    elif accuracy == current_best_accuracy:
+        if current_best_time is None or elapsed < current_best_time:
+            stats["best_time"] = elapsed
+            new_time_record = True
+
+            print("Same accuracy, but faster time!")
+
+    # Games played always increases
     stats["games_played"] += 1
 
     return new_accuracy_record, new_time_record
@@ -264,7 +275,7 @@ def results_screen(elapsed, new_accuracy_record=False, new_time_record=False):
 
         # Export button — grey out after export to prevent duplicate entries
         export_colour = (150, 150, 150) if exported else (100, 149, 200)
-        export_btn = draw_button(main_screen, "Export Results", font, 375, 390, 250, 55, export_colour)
+        export_btn = draw_button(main_screen, "Save Results", font, 375, 390, 250, 55, export_colour)
 
         draw_text(attribution_text, font_small, BLACK, main_screen, 10, 525)
 
