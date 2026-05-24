@@ -1,9 +1,10 @@
 """
 Maori NZ Quiz Game by Jade Akinbo
 Version 3 - Load Statistics
-    - Shown at the end of the quiz game loop
-    - Shows % accuracy
-    - Shows time elapsed
+    - Handles high score and general game statistics
+    - If ther eis no txt file, a new one is created
+    - Checks if there are already existing txt files under certain names
+    - Checks if there is no txt file, a new one is creates
 """
 
 import pygame
@@ -110,8 +111,8 @@ def load_statistics():
 
     Returns a dict with keys:
         best_accuracy (float) : highest accuracy percentage recorded
-        best_time     (float|None) : fastest time in seconds, or None if no run finished yet
-        games_played  (int)   : total completed games
+        best_time (float|None) : fastest time in seconds, or None if no run finished yet
+        games_played (int): total completed games
     """
     stats = DEFAULT_STATS.copy()
 
