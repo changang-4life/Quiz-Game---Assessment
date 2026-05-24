@@ -73,6 +73,7 @@ pygame.init()
 clock = pygame.time.Clock()
 
 score = 0
+game_start_time = 0
 attribution_text = "Game icon image: https://www.flaticon.com/free-icons/quiz. This game icon has been designed using resources from Flaticon.com"
 
 BLUE  = (173, 216, 230)
@@ -232,10 +233,29 @@ def draw_text(text, font, colour, surface, x, y, centre=False):
 def draw_button(surface, text, font, x, y, width, height, colour):
     button_rect = pygame.Rect(x, y, width, height)
     pygame.draw.rect(surface, colour, button_rect, border_radius=8)
-    text_surface = font.render(text, True, WHITE)
+
+    # Start with the normal font size
+    button_font = font
+    text_surface = button_font.render(text, True, WHITE)
+
+    # If text is too wide, reduce font size
+    font_size = 24
+    while text_surface.get_width() > width - 20 and font_size > 12:
+        font_size -= 1
+        button_font = pygame.font.SysFont("Arial", font_size)
+        text_surface = button_font.render(text, True, WHITE)
+
     text_rect = text_surface.get_rect(center=button_rect.center)
     surface.blit(text_surface, text_rect)
+
     return button_rect
+
+
+def draw_timer():
+    elapsed_so_far = time.time() - game_start_time
+    mins = int(elapsed_so_far // 60)
+    secs = int(elapsed_so_far % 60)
+    draw_text(f"Time: {mins}m {secs}s", font, BLACK, main_screen, 10, 10)
 
 
 def show_result(correct):
@@ -264,18 +284,18 @@ def results_screen(elapsed, new_accuracy_record=False, new_time_record=False):
         draw_text(f"Score: {score} / 10", font, BLACK, main_screen, 550, 180, centre=True)
 
         # Accuracy row — highlight if new record
-        draw_text(f"Accuracy: {accuracy:.0f}%", font, BLACK, main_screen, 550, 240, centre = True)
+        draw_text(f"Accuracy: {accuracy:.0f}%", font, BLACK, main_screen, 550, 240, centre=True)
         if new_accuracy_record:
             draw_text("NEW BEST!", font, (180, 0, 180), main_screen, 760, 240, centre=True)
 
         # Time row — highlight if new record
-        draw_text(f"Time: {minutes}m {seconds}s", font, BLACK, main_screen, 550, 300, centre = True)
+        draw_text(f"Time: {minutes}m {seconds}s", font, BLACK, main_screen, 550, 300, centre=True)
         if new_time_record:
-            draw_text("NEW BEST!", font, (180, 0, 180), main_screen, 760, 300, centre = True)
+            draw_text("NEW BEST!", font, (180, 0, 180), main_screen, 760, 300, centre=True)
 
         # Export button — grey out after export to prevent duplicate entries
         export_colour = (150, 150, 150) if exported else (100, 149, 200)
-        export_btn = draw_button(main_screen, "Save Results", font, 375, 390, 250, 55, export_colour)
+        export_btn = draw_button(main_screen, "Save Results", font, 430, 390, 250, 55, export_colour)
 
         draw_text(attribution_text, font_small, BLACK, main_screen, 10, 525)
 
@@ -304,6 +324,7 @@ def screen1():
         button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (100, 149, 200))
         button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (100, 149, 200))
         button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (100, 149, 200))
+        draw_timer()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -333,6 +354,7 @@ def screen2():
         button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (100, 149, 200))
         button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (100, 149, 200))
         button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (100, 149, 200))
+        draw_timer()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -362,6 +384,7 @@ def screen3():
         button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (100, 149, 200))
         button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (100, 149, 200))
         button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (100, 149, 200))
+        draw_timer()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -391,6 +414,7 @@ def screen4():
         button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (100, 149, 200))
         button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (100, 149, 200))
         button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (100, 149, 200))
+        draw_timer()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -420,6 +444,7 @@ def screen5():
         button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (100, 149, 200))
         button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (100, 149, 200))
         button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (100, 149, 200))
+        draw_timer()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -449,6 +474,7 @@ def screen6():
         button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (100, 149, 200))
         button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (100, 149, 200))
         button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (100, 149, 200))
+        draw_timer()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -478,6 +504,7 @@ def screen7():
         button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (100, 149, 200))
         button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (100, 149, 200))
         button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (100, 149, 200))
+        draw_timer()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -507,6 +534,7 @@ def screen8():
         button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (100, 149, 200))
         button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (100, 149, 200))
         button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (100, 149, 200))
+        draw_timer()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -536,6 +564,7 @@ def screen9():
         button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (100, 149, 200))
         button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (100, 149, 200))
         button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (100, 149, 200))
+        draw_timer()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -565,6 +594,7 @@ def screen10():
         button_2 = draw_button(main_screen, options[1], font, 600, 150, 300, 60, (100, 149, 200))
         button_3 = draw_button(main_screen, options[2], font, 200, 280, 300, 60, (100, 149, 200))
         button_4 = draw_button(main_screen, options[3], font, 600, 280, 300, 60, (100, 149, 200))
+        draw_timer()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -583,9 +613,11 @@ def screen10():
 
 
 def game_loop():
+    global game_start_time
     stats = load_stats()
 
-    start_time = time.time()
+    game_start_time = time.time()
+    start_time = game_start_time
 
     screen1()
     screen2()
